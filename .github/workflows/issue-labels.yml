@@ -1,0 +1,27 @@
+name: Issue labels
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  strip-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.payload.issue.number;
+            const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, { ...context.repo, issue_number });
+            for (const name of ["in-progress", "agent-ready"]) {
+              if (!labels.some((label) => label.name === name)) continue;
+              try {
+                await github.rest.issues.removeLabel({ ...context.repo, issue_number, name });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+            }
