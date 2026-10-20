@@ -64,6 +64,12 @@ def main() -> int:
     try:
         # Parse arguments, set up logging
         args = parse.arguments()
+        if args.action == "boot_chain":
+            from pmb.commands.image import boot_chain
+
+            os.umask(0o22)
+            boot_chain(args)
+            return 0
         context = get_context()
         os.umask(0o22)
 
@@ -89,11 +95,6 @@ def main() -> int:
             from pmb.commands.image import image
 
             image(args)
-            return 0
-        elif args.action == "boot_chain":
-            from pmb.commands.image import boot_chain
-
-            boot_chain(args)
             return 0
         elif not os.path.exists(args.config):
             if args.config != config.defaults["config"]:
@@ -134,7 +135,10 @@ def main() -> int:
         sys.exit(130)  # SIGINT(2) + 128
 
     except NonBugError as exception:
-        logging.error(f"ERROR: {exception}")
+        if "args" in locals() and args.action == "boot_chain":
+            print(f"ERROR: {exception}", file=sys.stderr)
+        else:
+            logging.error(f"ERROR: {exception}")
         return 2
 
     except BuildFailedError as exception:

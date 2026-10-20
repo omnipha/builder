@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 
 import pmb.helpers.cli
+from pmb import main
 from pmb.commands.image import (
     BOOT_PARTITIONS,
     boot_chain,
@@ -211,6 +212,32 @@ def test_boot_chain_missing_manifest_fails_before_output(tmp_path: Path) -> None
             )
         )
     assert not output.exists()
+
+
+def test_boot_chain_cli_fails_without_config_or_pmaports(
+    tmp_path: Path, monkeypatch: Any, capsys: Any
+) -> None:
+    recipe = tmp_path / "image.yaml"
+    recipe.write_text("device: nothing-asteroids\n")
+    directory = tmp_path / "inputs"
+    directory.mkdir()
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pmbootstrap",
+            "boot_chain",
+            str(recipe),
+            "--layout-manifest",
+            str(tmp_path / "missing.json"),
+            "--input-dir",
+            str(directory),
+            "--output",
+            str(tmp_path / "output"),
+        ],
+    )
+    assert main() == 2
+    assert "missing recipe, manifest" in capsys.readouterr().err
+    assert not (tmp_path / "output").exists()
 
 
 def test_boot_chain_requires_per_input_provenance(tmp_path: Path) -> None:

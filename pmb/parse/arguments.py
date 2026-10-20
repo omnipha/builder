@@ -1281,6 +1281,9 @@ def arguments() -> PmbArgs:
     args = PmbArgs()
     get_parser().parse_args(namespace=args)
 
+    if args.action == "boot_chain":
+        return args
+
     if args.action == "image":
         if args.config == pmb.config.defaults["config"] or args.config.exists():
             raise NonBugError("image requires -c NEW_CONFIG; existing configs are not read")

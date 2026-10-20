@@ -967,4 +967,4 @@ def boot_chain(args: PmbArgs) -> None:
             encoding="ascii",
         )
         staged.rename(output)
-    logging.info(f"Validated slot-A-only boot images and byte-level SHA256SUMS written to {output}")
+    print(f"Validated slot-A-only boot images and byte-level SHA256SUMS written to {output}")
