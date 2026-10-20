@@ -271,9 +271,11 @@ def setup_login(config: Config, chroot: Chroot, password: str) -> None:
     :param suffix: of the chroot, where passwd will be execute (either the
                    rootfs_{args.device} or installer_{args.device}
     """
-    # User password
-    logging.info(f" *** SET LOGIN PASSWORD FOR: '{config.user}' ***")
-    setup_login_chpasswd_user_from_arg(config.user, password, chroot)
+    if get_context().non_interactive:
+        pmb.chroot.root(["passwd", "-l", config.user], chroot)
+    else:
+        logging.info(f" *** SET LOGIN PASSWORD FOR: '{config.user}' ***")
+        setup_login_chpasswd_user_from_arg(config.user, password, chroot)
 
     # Disable root login
     if is_root_locked(chroot):
@@ -288,17 +290,25 @@ def copy_ssh_keys(config: Config) -> None:
     if not config.ssh_keys:
         return
     keys = []
-    for key in glob.glob(os.path.expanduser(config.ssh_key_glob)):
-        with open(key) as infile:
-            try:
-                keys += infile.readlines()
-            except UnicodeDecodeError:
-                logging.info(
-                    f"WARNING: {key} is not a valid SSH key. "
-                    "This file will not be copied to device."
-                )
+    if get_context().non_interactive:
+        key_path = Path(config.ssh_key_glob)
+        if not key_path.is_file():
+            raise NonBugError(f"SSH public key not found: {key_path}")
+        keys = [key_path.read_text(encoding="utf-8")]
+    else:
+        for key in glob.glob(os.path.expanduser(config.ssh_key_glob)):
+            with open(key) as infile:
+                try:
+                    keys += infile.readlines()
+                except UnicodeDecodeError:
+                    logging.info(
+                        f"WARNING: {key} is not a valid SSH key. "
+                        "This file will not be copied to device."
+                    )
 
     if not len(keys):
+        if get_context().non_interactive:
+            raise NonBugError("SSH public key is required in non-interactive mode")
         logging.info(
             "NOTE: Public SSH keys not found. Since no SSH keys "
             "were copied, you will need to use SSH password "
@@ -315,6 +325,7 @@ def copy_ssh_keys(config: Config) -> None:
     pmb.helpers.run.root(["mkdir", target])
     pmb.helpers.run.root(["chmod", "700", target])
     pmb.helpers.run.root(["cp", authorized_keys, target / "authorized_keys"])
+    pmb.helpers.run.root(["chmod", "600", target / "authorized_keys"])
     pmb.helpers.run.root(["rm", authorized_keys])
     pmb.helpers.run.root(["chown", "-R", "10000:10000", target])
 
@@ -939,6 +950,16 @@ def install_system_image(
     create_home_from_skel(filesystem, config.user)
     configure_apk(install_local_pkgs)
     copy_ssh_keys(config)
+    if get_context().non_interactive:
+        sshd_config = "/mnt/install/etc/ssh/sshd_config.d/90-omnipha.conf"
+        pmb.chroot.root(["mkdir", "-p", "/mnt/install/etc/ssh/sshd_config.d"])
+        pmb.chroot.root(
+            [
+                "sh",
+                "-c",
+                f"printf 'PasswordAuthentication no\\nKbdInteractiveAuthentication no\\n' > {sshd_config}",
+            ]
+        )
 
     # Don't try to embed firmware and cgpt on split images since there's no
     # place to put it and it will end up in /dev of the chroot instead
@@ -1342,6 +1363,11 @@ def create_device_rootfs(
 
     if no_sshd:
         disable_service(config, chroot, "sshd")
+    elif context.non_interactive:
+        if pmb.config.is_systemd_selected(config):
+            pmb.chroot.root(["systemctl", "enable", "sshd"], chroot)
+        else:
+            pmb.chroot.root(["rc-update", "add", "sshd", "default"], chroot)
     if no_firewall:
         disable_service(config, chroot, "nftables")
 
