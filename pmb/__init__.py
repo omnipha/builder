@@ -85,6 +85,11 @@ def main() -> int:
         if args.action == "init":
             config_init.frontend(args)
             return 0
+        elif args.action == "image":
+            from pmb.commands.image import image
+
+            image(args)
+            return 0
         elif not os.path.exists(args.config):
             if args.config != config.defaults["config"]:
                 raise NonBugError(f"Couldn't find file passed with --config: {args.config}")

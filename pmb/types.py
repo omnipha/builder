@@ -188,6 +188,7 @@ class PmbArgs(Namespace):
     all_git: bool
     all_stable: bool
     allow_untrusted: bool
+    aports_revision: str
     android_recovery_zip: bool
     apkindex_path: Apkindex
     aports: list[Path] | None
@@ -235,7 +236,9 @@ class PmbArgs(Namespace):
     host_qemu: bool
     http: bool
     ignore_depends: bool
+    image_output: Path
     image_size: str | None
+    image_yaml: Path
     image: bool
     install_base: bool
     install_blockdev: bool
@@ -266,6 +269,7 @@ class PmbArgs(Namespace):
     no_reboot: bool
     no_sshd: bool
     non_existing: str
+    non_interactive: bool
     odin_flashable_tar: bool
     offline: bool
     output: RunOutputTypeDefault
@@ -282,6 +286,9 @@ class PmbArgs(Namespace):
     pkgs_local_mismatch: bool
     pkgs_online_mismatch: bool
     port: int
+    ports: Path
+    ports_revision: str
+    profile: str
     qemu_audio: str | None
     qemu_cpu: str | None
     qemu_display: str
@@ -300,6 +307,7 @@ class PmbArgs(Namespace):
     scripts: str
     second_storage: str | None
     sector_size: int | None
+    ssh_pubkey: Path
     selected_providers: dict[str, str]
     sparse: bool | None
     split: bool | None

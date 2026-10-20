@@ -92,6 +92,7 @@ def init(args: PmbArgs) -> PmbArgs:
     context.cross = args.cross
     context.ccache = args.ccache
     context.assume_yes = getattr(args, "assume_yes", False)
+    context.non_interactive = getattr(args, "non_interactive", False)
     context.force = getattr(args, "force", False)
     context.no_depends = getattr(args, "no_depends", False)
 
@@ -110,6 +111,7 @@ def init(args: PmbArgs) -> PmbArgs:
     # Initialization code which may raise errors
     if args.action not in [
         "init",
+        "image",
         "checksum",
         "config",
         "bootimg_analyze",

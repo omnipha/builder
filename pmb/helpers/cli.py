@@ -58,6 +58,8 @@ def ask(
     :param validation_regex: if set, keep asking until regex matches
     :param complete: set to a list to enable tab completion
     """
+    if get_context().non_interactive:
+        raise RuntimeError(f"Prompt required in non-interactive mode: {question}")
     styles = pmb.config.styles
 
     while True:
@@ -116,6 +118,8 @@ def confirm(
     :param no_assumptions: ask for confirmation, even if "pmbootstrap -y' is set
     :returns: True for "y", False for "n"
     """
+    if get_context().non_interactive:
+        raise RuntimeError(f"Confirmation required in non-interactive mode: {question}")
     default_str = "y" if default else "n"
     if get_context().assume_yes and not no_assumptions:
         logging.info(question + " (y/n) [" + default_str + "]: y")

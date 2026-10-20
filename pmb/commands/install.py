@@ -97,7 +97,7 @@ def install(
                 " to delete them."
             )
 
-    if not password:
+    if not password and not get_context().non_interactive:
         password = ""
         while not password:
             password = getpass(f"Choose a password for the user '{config.user}': ")

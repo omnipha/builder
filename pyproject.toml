@@ -12,6 +12,7 @@ description = "A sophisticated chroot / build / flash tool to develop and instal
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
 
 [project.scripts]
 pmbootstrap = "pmb:main"

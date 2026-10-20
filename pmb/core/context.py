@@ -35,6 +35,7 @@ class Context:
 
     # assume yes to prompts
     assume_yes: bool = False
+    non_interactive: bool = False
 
     # Operate offline
     offline: bool = False

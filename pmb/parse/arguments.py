@@ -918,6 +918,22 @@ def get_parser() -> argparse.ArgumentParser:
     arguments_status(sub)
     arguments_ci(sub)
 
+    image = sub.add_parser("image", help="build and hash an image from image.yaml without prompts")
+    image.add_argument("image_yaml", type=Path, help="path to image.yaml")
+    image.add_argument("--non-interactive", action="store_true", required=True)
+    image.add_argument("--profile", choices=["server"], required=True)
+    image.add_argument("--ssh-pubkey", type=Path, required=True)
+    image.add_argument("--ports", type=Path, required=True, help="pinned omnipha/ports checkout")
+    image.add_argument("--ports-revision", required=True, help="expected omnipha/ports commit")
+    image.add_argument("--aports-revision", required=True, help="expected pmaports commit")
+    image.add_argument(
+        "--output",
+        dest="image_output",
+        type=Path,
+        required=True,
+        help="directory for copied images and SHA256SUMS",
+    )
+
     # Action: init
     init = sub.add_parser("init", help="initialize config file")
     init.add_argument(
@@ -1258,6 +1274,12 @@ def get_parser() -> argparse.ArgumentParser:
 def arguments() -> PmbArgs:
     args = PmbArgs()
     get_parser().parse_args(namespace=args)
+
+    if args.action == "image":
+        if args.config == pmb.config.defaults["config"] or args.config.exists():
+            raise NonBugError("image requires -c NEW_CONFIG; existing configs are not read")
+        if not args.aports or len(args.aports) != 1 or getattr(args, "work", None) is None:
+            raise NonBugError("image requires -w NEW_WORK and -p PINNED_PMAPORTS")
 
     if getattr(args, "fork_alpine_retain_branch", False):
         # fork_alpine_retain_branch largely matches the behaviour of fork_alpine, so
