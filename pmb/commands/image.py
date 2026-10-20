@@ -89,10 +89,17 @@ def load_recipe(path: Path, profile: str) -> dict[str, Any]:
     userdata = field(flash, "userdata", dict)
     if field(userdata, "filesystem", str) not in ("ext4", "f2fs"):
         raise NonBugError("image.yaml: unsupported userdata filesystem")
-    if field(userdata, "encryption", str) != "none":
+    encryption = field(userdata, "encryption", str)
+    if encryption == "metadata":
         raise NonBugError(
-            "image.yaml: metadata encryption is not supported by pmbootstrap; cannot build a flashable image"
+            "image.yaml: metadata-encrypted userdata cannot be built offline: "
+            "a plaintext f2fs image or --fde (LUKS) is not Android metadata encryption. "
+            "A separate metadata partition and boot-time, device-bound key management "
+            "are required; this image path cannot provision or verify them. "
+            "An explicit product decision on the image definition is required"
         )
+    if encryption != "none":
+        raise NonBugError(f"image.yaml: unsupported userdata encryption: {encryption}")
     if set(partitions) - {"boot", "vendor_boot", "userdata"}:
         raise NonBugError(
             "image.yaml: dtbo/vbmeta and other flash partitions cannot be generated safely"
