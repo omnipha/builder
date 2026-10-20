@@ -934,6 +934,12 @@ def get_parser() -> argparse.ArgumentParser:
         help="directory for copied images and SHA256SUMS",
     )
 
+    boot_chain = sub.add_parser("boot_chain", help="build a validated slot-A header-v4 boot chain")
+    boot_chain.add_argument("image_yaml", type=Path)
+    boot_chain.add_argument("--layout-manifest", type=Path, required=True)
+    boot_chain.add_argument("--input-dir", type=Path, required=True)
+    boot_chain.add_argument("--output", dest="image_output", type=Path, required=True)
+
     # Action: init
     init = sub.add_parser("init", help="initialize config file")
     init.add_argument(
@@ -1274,6 +1280,9 @@ def get_parser() -> argparse.ArgumentParser:
 def arguments() -> PmbArgs:
     args = PmbArgs()
     get_parser().parse_args(namespace=args)
+
+    if args.action == "boot_chain":
+        return args
 
     if args.action == "image":
         if args.config == pmb.config.defaults["config"] or args.config.exists():
