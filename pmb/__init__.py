@@ -90,6 +90,11 @@ def main() -> int:
 
             image(args)
             return 0
+        elif args.action == "boot_chain":
+            from pmb.commands.image import boot_chain
+
+            boot_chain(args)
+            return 0
         elif not os.path.exists(args.config):
             if args.config != config.defaults["config"]:
                 raise NonBugError(f"Couldn't find file passed with --config: {args.config}")

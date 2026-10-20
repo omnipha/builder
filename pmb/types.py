@@ -239,6 +239,7 @@ class PmbArgs(Namespace):
     image_output: Path
     image_size: str | None
     image_yaml: Path
+    input_dir: Path
     image: bool
     install_base: bool
     install_blockdev: bool
@@ -254,6 +255,7 @@ class PmbArgs(Namespace):
     keymap: str
     keep_going: bool
     lax: bool
+    layout_manifest: Path
     lines: int
     log: Path
     memory: int
